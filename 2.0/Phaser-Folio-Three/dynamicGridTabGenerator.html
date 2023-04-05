@@ -1,0 +1,171 @@
+<%@page import="in.indev.common.util.Services"%>
+<%@page import="java.util.ArrayList"%>
+<%@page import="org.jdom2.Element"%>
+<%@page import="org.jdom2.Document"%>
+<%@page import="java.util.List"%>
+<%@page import="org.jdom2.input.SAXBuilder"%>
+<%@page import="java.io.File"%>
+<%
+    String containerCount = "", pageName = "";
+    String module = request.getParameter("module");
+    String parentNode = request.getParameter("page");
+    if (request.getParameter("pageName") != null && !request.getParameter("pageName").equals("")) {
+        pageName = request.getParameter("pageName");
+    }
+    String isImportPresent = "N", isAddCopyRemovePresent = "N";
+    String height = "100px";
+    if (request.getParameter("isAddCopyRemovePresent") != null) {
+        isAddCopyRemovePresent = request.getParameter("isAddCopyRemovePresent");
+    }
+    if (request.getParameter("isImportPresent") != null) {
+        isImportPresent = request.getParameter("isImportPresent");
+    }
+    if (request.getParameter("height") != null) {
+        height = request.getParameter("height");
+    }
+
+    File fXmlFile = new File(request.getServletContext().getRealPath("/") + "\\screens\\xml\\pagemultiline\\" + module + ".xml");
+    SAXBuilder builder = new SAXBuilder();
+    Document document = (Document) builder.build(fXmlFile);
+    Element rootNode = document.getRootElement();
+    List<Element> childList = rootNode.getChildren(parentNode).get(0).getChildren();
+    ArrayList multiLineBeanList = new ArrayList();
+    String nodeName = "";
+
+    if (childList.size() > 0) {
+        Element headerNode = (Element) childList.get(0);
+        if (request.getAttribute("countainerSizeCount") != null) {
+            containerCount = (String) request.getAttribute("countainerSizeCount");
+        }
+%> 
+<div class="subheading"><%=headerNode.getValue()%>
+    <label style="float: right" id="branchListLbl">${strBuildBranchList}</label>
+    <div class="gridAlternateDiv"> 
+        <table cellpadding="0" cellspacing="0" >
+            <tr>
+                <td style="width: 100%">
+                    <div>
+                        <table>
+                            <tr>
+                                <%
+                                    for (int index = 1; index < childList.size(); index++) {
+                                        Element node = (Element) childList.get(index);
+                                        if (request.getAttribute(node.getValue()) != null && !((ArrayList) request.getAttribute(node.getValue())).isEmpty()) {
+                                            multiLineBeanList.add(node.getValue());
+                                %>
+                                <td style="padding-right:2px;width: 14%;">
+                                    <%
+                                        if (!pageName.equals("viewPostingRecord")) {
+                                    %>
+                                    <div id="<%=node.getValue()%>" class="<%if (index == 1) {
+                                             nodeName = node.getAttributeValue("name");%>gridtabselected<%} else {%>gridtab<%}%>" onclick="events.tabIndexOpen(this);"><%=node.getAttributeValue("name")%></div>
+                                    <%
+                                    } else {
+                                    %>
+                                    <div id="<%=node.getValue()%>" class="<%if (index == 1) {
+                                            nodeName = node.getAttributeValue("name");%>gridtabselected<%} else {%>gridtab<%}%>"><%=node.getAttributeValue("name")%></div>
+                                    <%}%>
+                                </td>
+                                <%          }
+                                        }
+                                    }
+//                                    int size = childList.size() - 1;
+                                    int size = multiLineBeanList.size();
+                                    size = size * 14;
+                                    size = 100 - size;
+                                %>
+                                <td align="right" class="gridtab" width="<%=size%>%"><div>&nbsp;</div></td>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="gridsubheading" colspan="8">
+                    <table style="width: 99%;">
+                        <tr>
+                            <td class="gridsubheadingleftpanel" style="width: 14%"><%=nodeName%></td>
+                            <%
+                                if (pageName != null && pageName.equalsIgnoreCase("viewPostingRecord")) {
+                            %>
+                            <td class="gridsubheadingrightpanel" style="width: 86%"></td>
+                            <%} else {%>
+                            <td class="gridsubheadingrightpanel" style="width: 86%">
+                                <table style="width:100%">
+                                    <tr>
+                                        <td id="containerCount" style="width: 70%;margin-top:0px;vertical-align: middle"><%=containerCount%></td>
+                                        <td style="vertical-align: top;padding-top: 0px;width: 21%;text-indent: 4px;">
+                                            <input type="text" class="gridsearchspantextbox" onkeyup="commonExt.searchGridText(event)" id="searchValue"/> 
+                                        </td>
+                                        <td>&nbsp;&nbsp;&nbsp;</td>
+                                        <%if (isImportPresent.equals("Y")) {%>
+                                        <td id="importBtn" style="cursor:pointer;">
+                                            <img src="screens/images/import.png" onclick="commonExt.importExcelFile('<%=pageName%>')" title="Upload your Excel"/> 
+                                        </td>
+                                        <%}%>
+                                        <td id="exportBtn" style="cursor: pointer;padding-top: 2px" onclick="commonExt.generateExcel('<%=parentNode%>')">
+                                            <img src="screens/images/export.png" title="Download Excel"/>
+                                        </td>
+                                        <td id="addBtn">
+                                            <img src="screens/images/addRow.png" style="cursor: pointer;" title="Add" <%if (module != null && module.equalsIgnoreCase("empty-yard")) {%> onclick="commonEmptyYard.addNewRow('<%=module%>', '<%=parentNode%>')" <%} else if (module != null && module.equalsIgnoreCase("bonding")) {%> onclick="commonBonding.addNewRow('<%=module%>', '<%=parentNode%>')" <%} else if (module != null && module.equalsIgnoreCase("export")) {%> onclick="commonExport.addNewRow('<%=module%>', '<%=parentNode%>')" <%} else {%>  onclick="commonExt.addNewRow('<%=module%>', '<%=parentNode%>')" <%}%>/>
+                                        </td>
+                                        <td id="pasteBtn">
+                                            <img src="screens/images/paste.png" style="cursor: pointer;width:16px;height:16px" title="Paste" <%if (module != null && module.equalsIgnoreCase("empty-yard")) {%> onclick="commonEmptyYard.copyRow('<%=module%>', '<%=parentNode%>')" <%} else if (module != null && module.equalsIgnoreCase("bonding")) {%> onclick="commonBonding.copyRow('<%=module%>', '<%=parentNode%>')" <%} else if (module != null && module.equalsIgnoreCase("export")) {%> onclick="commonExport.copyRow('<%=module%>', '<%=parentNode%>')" <%} else {%>  onclick="commonExt.copyRow('<%=module%>', '<%=parentNode%>')" <%}%>/>
+                                        </td>
+                                        <td id="removeBtn">
+                                            <img src="screens/images/deleteRow.png" style="cursor:pointer" <%if (module != null && module.equalsIgnoreCase("empty-yard")) {%> onclick="commonEmptyYard.deleteRow('<%=module%>', '<%=parentNode%>')" <%} else if (module != null && module.equalsIgnoreCase("bonding")) {%> onclick="commonBonding.deleteRow('<%=module%>', '<%=parentNode%>')" <%} else if (module != null && module.equalsIgnoreCase("export")) {%> onclick="commonExport.deleteRow('<%=module%>', '<%=parentNode%>')" <%} else {%>  onclick="commonExt.deleteRow('<%=module%>', '<%=parentNode%>')" <%}%> title="Remove"/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <%}%>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="8">
+                    <% int index = 0;
+                        for (Object item : multiLineBeanList) {
+//                        }
+//                        for (int index = 0;
+//                                index < multiLineBeanList.size();
+//                                index++) {
+                            String beanListName = (String) item;
+                            String isShow = "Y";
+                            if (index > 0) {
+                                isShow = "N";
+                            }
+                    %>
+                    <jsp:include page="../includes/dynamicmultiLineGridGenerator.jsp">
+                        <jsp:param name="beanListName" value="<%=beanListName%>"/>
+                        <jsp:param name="height" value="<%=height%>"/>
+                        <jsp:param name="isShow" value="<%=isShow%>"/>
+                        <jsp:param name="gridIndex" value="<%=index%>"/>
+                    </jsp:include>
+                    <% index++;
+                        }%>
+                    <input  type = "hidden" id = "datePickerListForMulti" value ="<%=request.getAttribute("datePickerListForMulti")%>"/>
+                    <input type="hidden" id="dateTimePickerListForMulti" value="<%=request.getAttribute("dateTimePickerListForMulti")%>"/>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<%if (isImportPresent.equals("Y")) {%>
+<form id="mappingForm" name="mappingForm">
+    <div id="mappingTab" >
+    </div>
+</form>
+<%}%>
+<input type="hidden" name="beanListName" id="beanListName" value="<%=pageName%>"/>
+<textarea name="excelHeaderContent" id="excelHeaderContent" style="display: none;" ></textarea>
+<textarea name="excelBodyContent" id="excelBodyContent" style="display: none;"></textarea>
+<script>
+    $('#searchValue').focus(function () {
+        $(this).css("background-color", "#FFE5B4");
+    });
+    $('#searchValue').blur(function () {
+        $(this).css("background-color", "#FFFFFF");
+    });
+</script>
